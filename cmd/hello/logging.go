@@ -27,7 +27,7 @@ func setupLogging() error {
 		return err
 	}
 	for _, fd := range []int{1, 2} {
-		if err := syscall.Dup3(int(f.Fd()), fd, 0); err != nil {
+		if err := syscall.Dup2(int(f.Fd()), fd); err != nil {
 			return err
 		}
 	}
