@@ -1,4 +1,4 @@
-# gdb settings for debugging hello.app on the reader, used by `make gdb`.
+# gdb settings for debugging passbolt.app on the reader, used by `make gdb`.
 # Paths refer to the pb-go-sdk Docker image.
 
 # Read the reader's shared libraries from the SDK sysroot instead of pulling

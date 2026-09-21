@@ -9,7 +9,7 @@ import (
 
 // logPath is on the reader's internal storage, next to the app. Read it with
 // `make log` after connecting the reader over USB.
-const logPath = "/mnt/ext1/applications/hello.log"
+const logPath = "/mnt/ext1/applications/passbolt.log"
 
 // maxLogSize is the size above which the log is truncated at startup.
 const maxLogSize = 1 << 20

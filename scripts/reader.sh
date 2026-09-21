@@ -1,7 +1,8 @@
 #!/bin/sh
 # Talks to a PocketBook reader mounted over USB ("PC link" on the reader).
 #
-#   scripts/reader.sh deploy   copy the app, its gdb launcher and gdbserver, then eject
+#   scripts/reader.sh deploy   copy the app, its gdb launcher and gdbserver, create
+#                              the app's config folder, then eject
 #   scripts/reader.sh log      print the app's log file
 #
 # The reader's volume is detected under /Volumes; set PB_VOLUME to override.
@@ -32,22 +33,23 @@ fi
 
 case ${1:-} in
 deploy)
-	for f in build/hello.app build/gdbserver; do
+	for f in build/passbolt.app build/gdbserver; do
 		[ -f "$f" ] || { echo "$f is missing; run 'make build' or 'make debug' first." >&2; exit 1; }
 	done
-	mkdir -p "$vol/system/usr/bin"
+	# applications/passbolt/ holds the app's config.json and private.asc.
+	mkdir -p "$vol/system/usr/bin" "$vol/applications/passbolt"
 	# -X and COPYFILE_DISABLE keep macOS from writing ._* files, which the
 	# reader's launcher would list as broken apps.
 	export COPYFILE_DISABLE=1
-	cp -X build/hello.app device/hello-gdb.app "$vol/applications/"
+	cp -X build/passbolt.app device/passbolt-gdb.app "$vol/applications/"
 	cp -X build/gdbserver "$vol/system/usr/bin/"
-	rm -f "$vol/applications/._hello.app" "$vol/applications/._hello-gdb.app" "$vol/system/usr/bin/._gdbserver"
+	rm -f "$vol/applications/._passbolt.app" "$vol/applications/._passbolt-gdb.app" "$vol/system/usr/bin/._gdbserver"
 	sync
 	echo "Deployed to $vol"
 	diskutil eject "$vol"
 	;;
 log)
-	cat "$vol/applications/hello.log"
+	cat "$vol/applications/passbolt.log"
 	;;
 *)
 	echo "usage: $0 deploy|log" >&2

@@ -1,8 +1,8 @@
-# Build, deploy and debug the PocketBook hello app. Everything that needs the
+# Build, deploy and debug the PocketBook Passbolt app. Everything that needs the
 # PocketBook SDK runs in the pb-go-sdk Docker image (docker/Dockerfile).
 
 IMAGE := pb-go-sdk
-APP := build/hello.app
+APP := build/passbolt.app
 GDB_PORT := 10002
 
 DOCKER := docker run --rm --platform linux/amd64 -v "$(CURDIR)":/src -w /src
@@ -16,12 +16,12 @@ image:
 
 # Release build: optimised and stripped.
 build:
-	$(DOCKER_GO) go build -trimpath -ldflags="-s -w" -o $(APP) ./cmd/hello
+	$(DOCKER_GO) go build -trimpath -ldflags="-s -w" -o $(APP) ./cmd/passbolt
 
 # Debug build: no optimisation or inlining, symbols kept. Same output path, so
 # the binary gdb reads is the one deployed to the reader.
 debug:
-	$(DOCKER_GO) go build -gcflags="all=-N -l" -o $(APP) ./cmd/hello
+	$(DOCKER_GO) go build -gcflags="all=-N -l" -o $(APP) ./cmd/passbolt
 
 build/gdbserver:
 	$(DOCKER) $(IMAGE) sh -c 'mkdir -p build && cp "$$SDK/usr/arm-obreey-linux-gnueabi/debug-root/usr/bin/gdbserver" build/'
@@ -32,7 +32,7 @@ deploy: build/gdbserver
 log:
 	scripts/reader.sh log
 
-# Attach to hello-gdb.app running on the reader: make gdb IP=192.168.1.42
+# Attach to passbolt-gdb.app running on the reader: make gdb IP=192.168.1.42
 gdb:
 	@test -n "$(IP)" || { echo "usage: make gdb IP=<reader IP>" >&2; exit 1; }
 	$(DOCKER) -it $(IMAGE) gdb-multiarch -q -ix debug/gdbinit -ex "target remote $(IP):$(GDB_PORT)" $(APP)
