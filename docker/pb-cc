@@ -1,0 +1,6 @@
+#!/bin/sh
+# C compiler for cgo: the SDK's gcc, with the host libraries it was built
+# against (libmpc, libmpfr, ...), which the SDK ships in $SDK/usr/lib.
+# Scoped to the compiler so the image's own tools keep their system libraries.
+# (The SDK's clang is unusable here: it needs libtinfo.so.5, gone from Debian.)
+LD_LIBRARY_PATH=$SDK/usr/lib exec "$SDK/usr/bin/arm-obreey-linux-gnueabi-gcc" "$@"
