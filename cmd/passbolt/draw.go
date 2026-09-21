@@ -317,7 +317,7 @@ func ellipsize(f font, s string, w int) string {
 func wrapWords(f font, s string, w int) []string {
 	var lines []string
 	line := ""
-	for _, word := range strings.Fields(s) {
+	for word := range strings.FieldsSeq(s) {
 		next := word
 		if line != "" {
 			next = line + " " + word
