@@ -1,8 +1,8 @@
 #!/bin/sh
 # Talks to a PocketBook reader mounted over USB ("PC link" on the reader).
 #
-#   scripts/reader.sh deploy   copy the app, its gdb launcher and gdbserver, create
-#                              the app's config folder, then eject
+#   scripts/reader.sh deploy   copy the app, its launcher icons, its gdb launcher and
+#                              gdbserver, create the app's config folder, then eject
 #   scripts/reader.sh log      print the app's log file
 #
 # The reader's volume is detected under /Volumes; set PB_VOLUME to override.
@@ -36,14 +36,18 @@ deploy)
 	for f in build/passbolt.app build/gdbserver; do
 		[ -f "$f" ] || { echo "$f is missing; run 'make build' or 'make debug' first." >&2; exit 1; }
 	done
-	# applications/passbolt/ holds the app's config.json and private.asc.
-	mkdir -p "$vol/system/usr/bin" "$vol/applications/passbolt"
+	# applications/passbolt/ holds the app's config.json and private.asc;
+	# applications/icons/ the launcher icons that view.json points to.
+	mkdir -p "$vol/system/usr/bin" "$vol/applications/passbolt" "$vol/applications/icons"
 	# -X and COPYFILE_DISABLE keep macOS from writing ._* files, which the
 	# reader's launcher would list as broken apps.
 	export COPYFILE_DISABLE=1
 	cp -X build/passbolt.app device/passbolt-gdb.app "$vol/applications/"
+	cp -X device/icons/passbolt.bmp device/icons/passbolt_f.bmp "$vol/applications/icons/"
 	cp -X build/gdbserver "$vol/system/usr/bin/"
-	rm -f "$vol/applications/._passbolt.app" "$vol/applications/._passbolt-gdb.app" "$vol/system/usr/bin/._gdbserver"
+	rm -f "$vol/applications/._passbolt.app" "$vol/applications/._passbolt-gdb.app" \
+		"$vol/applications/._icons" "$vol/applications/icons/._passbolt.bmp" "$vol/applications/icons/._passbolt_f.bmp" \
+		"$vol/system/usr/bin/._gdbserver"
 	sync
 	echo "Deployed to $vol"
 	diskutil eject "$vol"

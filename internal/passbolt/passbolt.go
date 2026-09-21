@@ -1,6 +1,7 @@
 // Package passbolt reads the app's configuration, verifies the Passbolt
-// server and lists the user's resources, using go-passbolt. It has no
-// PocketBook dependency, so it builds and runs on any machine.
+// server, lists the user's resources and decrypts their passwords, using
+// go-passbolt. It has no PocketBook dependency, so it builds and runs on any
+// machine.
 package passbolt
 
 import (
@@ -97,16 +98,20 @@ func Verify(ctx context.Context, c *api.Client, dir string) (pinned bool, err er
 	return false, nil
 }
 
-// Resource is the part of a Passbolt resource that is shown in the list.
+// Resource is a Passbolt resource as shown in the list. Its secret stays
+// encrypted until Password is called.
 type Resource struct {
-	Name, Username, URI string
+	ID, Name, Username, URI string
+
+	secret       string // armored, encrypted for the user; "" if the server sent none
+	secretString bool   // the decrypted secret is the password itself, not JSON
 }
 
-// ListResources returns the user's resources sorted by name, without
-// decrypting their secrets. Resources of a type the SDK does not support are
+// ListResources returns the user's resources sorted by name, with their
+// secrets still encrypted. Resources of a type the SDK does not support are
 // left out and counted in skipped.
 func ListResources(ctx context.Context, c *api.Client) (list []Resource, skipped int, err error) {
-	resources, err := c.GetResources(ctx, &api.GetResourcesOptions{})
+	resources, err := c.GetResources(ctx, &api.GetResourcesOptions{ContainSecret: true})
 	if err != nil {
 		return nil, 0, fmt.Errorf("getting resources: %w", err)
 	}
@@ -125,10 +130,42 @@ func ListResources(ctx context.Context, c *api.Client) (list []Resource, skipped
 		if err != nil {
 			return nil, 0, fmt.Errorf("reading resource %s: %w", r.ID, err)
 		}
-		list = append(list, Resource{Name: name, Username: username, URI: uri})
+		res := Resource{ID: r.ID, Name: name, Username: username, URI: uri, secretString: rType.IsSecretString()}
+		if len(r.Secrets) > 0 {
+			res.secret = r.Secrets[0].Data
+		}
+		list = append(list, res)
 	}
 	slices.SortFunc(list, func(a, b Resource) int {
 		return strings.Compare(strings.ToLower(a.Name), strings.ToLower(b.Name))
 	})
 	return list, skipped, nil
+}
+
+// Password decrypts r's secret with c's private key. It runs locally, but c
+// must not be logged out: Logout clears the key.
+func (r Resource) Password(c *api.Client) (string, error) {
+	if r.secret == "" {
+		return "", errors.New("the server sent no secret for this resource")
+	}
+	data, err := c.DecryptSecretWithResourceID(r.ID, r.secret)
+	if err != nil {
+		return "", fmt.Errorf("decrypting secret: %w", err)
+	}
+	return parsePassword(data, r.secretString)
+}
+
+// parsePassword returns the password in decrypted secret data: the data itself
+// for string secrets, else its "password" field ("" for TOTP-only resources).
+// This is how helper.GetResourceFromDataWithOptions reads it.
+func parsePassword(data string, isString bool) (string, error) {
+	if isString {
+		return data, nil
+	}
+	var fields map[string]any
+	if err := json.Unmarshal([]byte(data), &fields); err != nil {
+		// json's errors quote the input, which is the secret.
+		return "", errors.New("secret is not valid JSON")
+	}
+	return helper.GetStringField(fields, "password"), nil
 }
