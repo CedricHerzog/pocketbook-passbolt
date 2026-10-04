@@ -1,11 +1,11 @@
-# Build and debug image for PocketBook B288 readers (InkPad 3) on firmware 6.x.
+# Build image for PocketBook B288 readers (InkPad 3) on firmware 6.x.
 # The SDK's host tools are Linux x86_64 binaries, so the image is linux/amd64
 # (runs under Rosetta on Apple silicon); `make image` builds it for that platform.
 FROM debian:trixie-slim
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
-        ca-certificates curl git xz-utils file binutils-multiarch gdb-multiarch python3 \
+        ca-certificates curl git xz-utils file binutils-multiarch \
  && rm -rf /var/lib/apt/lists/*
 
 # Official PocketBook SDK, branch "6.5" (the one for firmware 6.x), pinned.

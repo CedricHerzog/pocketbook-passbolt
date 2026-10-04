@@ -7,8 +7,8 @@ import (
 	"syscall"
 )
 
-// logPath is on the reader's internal storage, next to the app. Read it with
-// `make log` after connecting the reader over USB.
+// logPath is on the reader's internal storage, next to the app. Read it after
+// connecting the reader over USB.
 const logPath = "/mnt/ext1/applications/passbolt.log"
 
 // maxLogSize is the size above which the log is truncated at startup.
