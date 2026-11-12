@@ -5,3 +5,4 @@ device/*.app text eol=lf
 *.svg text eol=lf
 *.png binary
 *.bmp binary
+*.ttf binary

@@ -6,13 +6,9 @@ package main
 
 import (
 	"crypto/tls"
-	"log"
 	"net/http"
-	"os"
 	"runtime"
 	"time"
-
-	ink "github.com/dennwc/inkview"
 )
 
 // configDir holds config.json and private.asc, copied over USB, and
@@ -32,17 +28,5 @@ func httpClient() *http.Client {
 			Proxy:           http.ProxyFromEnvironment,
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		},
-	}
-}
-
-func main() {
-	if err := setupLogging(); err != nil {
-		log.Printf("logging to %s disabled: %v", logPath, err)
-	}
-	log.Printf("passbolt starting (%s, pid %d)", runtime.Version(), os.Getpid())
-
-	// Run returns the error that stopped loading, already logged and shown.
-	if err := ink.Run(&app{}); err != nil {
-		os.Exit(1)
 	}
 }
